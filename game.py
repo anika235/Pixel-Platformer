@@ -166,12 +166,6 @@ def apply_physics(window):
     if char_y - char_radius > HEIGHT:
         game_over(window)
 
-    if char_y - char_radius > HEIGHT:
-        game_over(window)
-
-
-
-
 
 def render():
     glClear(GL_COLOR_BUFFER_BIT)
