@@ -166,6 +166,9 @@ def apply_physics(window):
     if char_y - char_radius > HEIGHT:
         game_over(window)
 
+    if char_y - char_radius > HEIGHT:
+        game_over(window)
+
 
 
 
