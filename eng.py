@@ -328,6 +328,33 @@ font = {
         0b10001,
         0b01110,
     ],
+    ':': [
+        0b00000,
+        0b01100,
+        0b01100,
+        0b00000,
+        0b01100,
+        0b01100,
+        0b00000,
+    ],
+    '.': [
+        0b00000,
+        0b00000,
+        0b00000,
+        0b00000,
+        0b01100,
+        0b01100,
+        0b00000,
+    ],
+    '\'': [
+        0b00100,
+        0b00100,
+        0b01000,
+        0b00000,
+        0b00000,
+        0b00000,
+        0b00000,
+    ],
 }
 
 def get_char_bitmap(char):
@@ -342,10 +369,6 @@ def render_text(x, y, height, text):
     
     scale = height / 7  
     start_x = x
-    
-    # if not rev:
-    #     for key in font:
-    #         font[key] = font[key][::-1]
     
     for char in text:
         bitmap = get_char_bitmap(char)
