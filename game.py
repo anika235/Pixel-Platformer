@@ -74,23 +74,62 @@ def key_input(window, key, scancode, action, mods):
             key_state[key] = False
 
 platforms = [
-    {'position': (500, 100), 'size': (120, 20), 'color': (0.6, 0.3, 0.1)},
-    {'position': (580, 200), 'size': (120, 20), 'color': (0.5, 0.5, 0.1)},
-    {'position': (680, 50), 'size': (120, 20), 'color': (0.0, 0.0, 1.0)},
-    {'position': (100, 100), 'size': (150, 20), 'color': (0.2, 0.5, 0.4)},
-    {'position': (300, 150), 'size': (180, 20), 'color': (0.5, 0.4, 0.2)},
-    {'position': (50, 250), 'size': (110, 20), 'color': (0.3, 0.6, 0.7)},
-    {'position': (450, 300), 'size': (160, 20), 'color': (0.7, 0.2, 0.5)},
-    {'position': (200, 350), 'size': (140, 20), 'color': (0.4, 0.7, 0.3)},
-    {'position': (550, 400), 'size': (130, 20), 'color': (0.5, 0.5, 0.1)},
-    {'position': (400, 450), 'size': (170, 20), 'color': (0.1, 0.5, 0.6)},
-    {'position': (150, 500), 'size': (100, 20), 'color': (0.2, 0.6, 0.3)},
-    {'position': (680, 500), 'size': (100, 20), 'color': (0.2, 0.6, 0.3)},
-    {'position': (0, 560), 'size': (100, 20), 'color': (0.4, 0.8, 0.2)},
-    {'position': (280, 550), 'size': (120, 20), 'color': (0.3, 0.4, 0.5)}
+    {'position': (680, 50), 'size': (120, 20), 'color': (0.0, 0.0, 1.0)}, # blue
+    {'position': (500, 90), 'size': (140, 20), 'color': (0.7, 0.2, 0.5)}, # pink
+    {'position': (100, 100), 'size': (150, 20), 'color': (0.2, 0.5, 0.4)}, # teal
+    {'position': (1700, 100), 'size': (150, 20), 'color': (0.5, 0.5, 0.2)}, # tan
+    {'position': (1000, 120), 'size': (150, 20), 'color': (0.2, 0.5, 0.4)}, # teal
+    {'position': (1200, 150), 'size': (120, 20), 'color': (0.8, 0.1, 0.3)}, # red
+    {'position': (300, 150), 'size': (180, 20), 'color': (0.5, 0.4, 0.2)}, # tan
+    {'position': (1400, 200), 'size': (160, 20), 'color': (0.2, 0.3, 0.8)}, # blue
+    {'position': (800, 200), 'size': (130, 20), 'color': (0.6, 0.4, 0.3)}, # brown
+    {'position': (580, 200), 'size': (120, 20), 'color': (0.5, 0.5, 0.1)}, # olive
+    {'position': (50, 250), 'size': (110, 20), 'color': (0.3, 0.6, 0.7)}, # light blue
+    {'position': (700, 250), 'size': (140, 20), 'color': (0.7, 0.4, 0.5)}, # pink
+    {'position': (450, 300), 'size': (160, 20), 'color': (0.7, 0.2, 0.5)}, # pink
+    {'position': (1600, 300), 'size': (170, 20), 'color': (0.4, 0.8, 0.2)}, # green
+    {'position': (1000, 300), 'size': (150, 20), 'color': (0.5, 0.3, 0.7)}, # purple
+    {'position': (800, 300), 'size': (170, 20), 'color': (0.5, 0.2, 0.7)}, # purple
+    {'position': (200, 350), 'size': (140, 20), 'color': (0.4, 0.7, 0.3)}, # green
+    {'position': (1700, 350), 'size': (120, 20), 'color': (0.4, 0.7, 0.4)}, # green
+    {'position': (550, 400), 'size': (130, 20), 'color': (0.5, 0.5, 0.1)}, # olive
+    {'position': (1000, 400), 'size': (170, 20), 'color': (0.4, 0.5, 0.7)}, # blue
+    {'position': (1200, 400), 'size': (160, 20), 'color': (0.5, 0.3, 0.7)}, # purple
+    {'position': (1800, 450), 'size': (120, 20), 'color': (0.3, 0.4, 0.5)}, # blue
+    {'position': (800, 450), 'size': (170, 20), 'color': (0.1, 0.3, 0.9)}, # blue
+    {'position': (150, 500), 'size': (100, 20), 'color': (0.2, 0.6, 0.3)}, # green
+    {'position': (680, 500), 'size': (100, 20), 'color': (0.2, 0.6, 0.3)}, # green
+    {'position': (1600, 500), 'size': (170, 20), 'color': (0.4, 0.6, 0.3)}, # green
+    {'position': (1400, 500), 'size': (130, 20), 'color': (0.9, 0.6, 0.3)}, # yellow
+    {'position': (1700, 550), 'size': (150, 20), 'color': (0.2, 0.7, 0.4)}, # green
+    {'position': (1100, 550), 'size': (180, 20), 'color': (0.1, 0.6, 0.4)}, # green
+    {'position': (500, 600), 'size': (110, 20), 'color': (0.8, 0.2, 0.4)}, # red
+    {'position': (900, 600), 'size': (110, 20), 'color': (0.3, 0.5, 0.9)}, # light blue
+    {'position': (300, 700), 'size': (180, 20), 'color': (0.3, 0.5, 0.9)}, # light blue
+    {'position': (1200, 700), 'size': (180, 20), 'color': (0.5, 0.7, 0.4)}, # green
+    {'position': (600, 700), 'size': (140, 20), 'color': (0.8, 0.4, 0.5)}, # pink
+    {'position': (100, 760), 'size': (100, 20), 'color': (0.4, 0.8, 0.2)}, # green
+    {'position': (300, 800), 'size': (130, 20), 'color': (0.6, 0.7, 0.3)}, # yellow-green
+    {'position': (500, 800), 'size': (170, 20), 'color': (0.7, 0.5, 0.2)}, # tan
+    {'position': (0, 960), 'size': (100, 20), 'color': (0.4, 0.8, 0.2)}, # green
+    {'position': (100, 880), 'size': (120, 20), 'color': (0.6, 0.3, 0.8)}, # purple
+    {'position': (1500, 850), 'size': (120, 20), 'color': (0.7, 0.2, 0.6)}, # pink
+    {'position': (900, 850), 'size': (150, 20), 'color': (0.2, 0.7, 0.6)}, # teal
+    {'position': (650, 900), 'size': (130, 20), 'color': (0.6, 0.4, 0.8)}, # purple
+    {'position': (1100, 900), 'size': (150, 20), 'color': (0.2, 0.5, 0.7)}, # blue
+    {'position': (1800, 900), 'size': (180, 20), 'color': (0.3, 0.4, 0.7)}, # blue
+    {'position': (1180, 950), 'size': (140, 20), 'color': (0.5, 0.5, 0.1)}, # olive
+    {'position': (350, 950), 'size': (180, 20), 'color': (0.3, 0.2, 0.9)}, # purple
+    {'position': (100, 1050), 'size': (150, 20), 'color': (0.7, 0.3, 0.2)}, # brown
+    {'position': (600, 1000), 'size': (180, 20), 'color': (0.5, 0.2, 0.8)}, # purple
+    #for the borders
+    {'position': (0, 0), 'size': (1920, 20), 'color': (0.0, 0.0, 0.0)}, # black
+    {'position': (0, 1060), 'size': (1920, 20), 'color': (0.0, 0.0, 0.0)}, # black
+    {'position': (0, 0), 'size': (20, 1080), 'color': (0.0, 0.0, 0.0)}, # black
+    {'position': (1900, 0), 'size': (20, 1080), 'color': (0.0, 0.0, 0.0)}, # black
 ]
 
-goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)} 
+goal_platform = {'position': (1900, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)} 
 platforms.append(goal_platform)
 
 def is_overlapping(x, y, size):
