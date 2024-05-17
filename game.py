@@ -1,4 +1,3 @@
-# Import the necessary functions from eng.py
 from eng import render_text
 
 import glfw
@@ -6,23 +5,20 @@ from OpenGL.GL import *
 from math import cos, sin
 import random
 
-# Character properties
 char_radius = 15
 char_x = 30
 char_y = 0
 move_speed = 2
 is_jumping = False
-jump_velocity = 5  # Initial upward velocity for jumping
+jump_velocity = 5 
 gravity = 0.1
-fall_speed = 0  # Initial fall speed
-max_fall_speed = 10  # Maximum fall speed
+fall_speed = 0 
+max_fall_speed = 10 
 is_on_platform = False
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1920, 1080
 
-# Track key states
 key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False}
 
-# Score
 score = 0
 
 def init_window():
@@ -30,12 +26,10 @@ def init_window():
         raise Exception("glfw can not be initialized!")
     
     global WIDTH, HEIGHT
-    WIDTH = 800
-    HEIGHT = 600
+    HEIGHT -= 70
     global char_y
     char_y = HEIGHT / 2 - char_radius
 
-    # Disable window resizing
     glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
     
     window = glfw.create_window(WIDTH, HEIGHT, "Pixel Platformer", None, None)
@@ -45,7 +39,6 @@ def init_window():
     glfw.make_context_current(window)
     glfw.swap_interval(1)
 
-    # Get screen dimensions to center the window
     screen_width = glfw.get_video_mode(glfw.get_primary_monitor()).size.width
     screen_height = glfw.get_video_mode(glfw.get_primary_monitor()).size.height
     glfw.set_window_pos(window, (screen_width - WIDTH) // 2, (screen_height - HEIGHT) // 2)
@@ -97,27 +90,41 @@ platforms = [
     {'position': (280, 550), 'size': (120, 20), 'color': (0.3, 0.4, 0.5)}
 ]
 
-goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)}  # Yellow color
+goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)} 
 platforms.append(goal_platform)
+
+def is_overlapping(x, y, size):
+    for platform in platforms:
+        px, py = platform['position']
+        pw, ph = platform['size']
+        if (px - size <= x <= px + pw + size) and (py - size <= y <= py + ph + size):
+            return True
+    return False
 
 def generate_obstacles():
     obstacles = []
     for _ in range(5):
-        x = random.randint(0, WIDTH - 50)
-        y = random.randint(0, HEIGHT - 50)
-        size = 20
-        color = (1.0, 0.0, 0.0)  # Red color for obstacles
-        obstacles.append({'position': (x, y), 'size': size, 'color': color})
+        while True:
+            x = random.randint(0, WIDTH - 50)
+            y = random.randint(0, HEIGHT - 50)
+            size = 20
+            if not is_overlapping(x, y, size):
+                color = (1.0, 0.0, 0.0)
+                obstacles.append({'position': (x, y), 'size': size, 'color': color})
+                break
     return obstacles
 
 def generate_coins():
     coins = []
     for _ in range(10):
-        x = random.randint(0, WIDTH - 20)
-        y = random.randint(0, HEIGHT - 20)
-        size = 10
-        color = (1.0, 1.0, 0.0)  # Yellow color for coins
-        coins.append({'position': (x, y), 'size': size, 'color': color})
+        while True:
+            x = random.randint(0, WIDTH - 20)
+            y = random.randint(0, HEIGHT - 20)
+            size = 10
+            if not is_overlapping(x, y, size):
+                color = (1.0, 1.0, 0.0)
+                coins.append({'position': (x, y), 'size': size, 'color': color})
+                break
     return coins
 
 obstacles = generate_obstacles()
@@ -147,7 +154,7 @@ def check_collision_and_update_position():
 
     is_on_platform = False
 
-    # Check collision with platforms
+
     for platform in platforms:
         px, py = platform['position']
         pw, ph = platform['size']
@@ -182,23 +189,21 @@ def check_collision_and_update_position():
                 char_x = platform_left - char_radius
                 break
 
-    # Check collision with obstacles
+
     for obstacle in obstacles:
         ox, oy = obstacle['position']
         size = obstacle['size']
 
-        if (ox - size / 2 <= char_x <= ox + size / 2 and
-                oy - size / 2 <= char_y <= oy + size / 2):
+        if (ox - char_x) ** 2 + (oy - char_y) ** 2 <= (size + char_radius) ** 2:
             game_over(glfw.get_current_context())
             return
 
-    # Check collision with coins
+
     for coin in coins[:]:
         cx, cy = coin['position']
         size = coin['size']
 
-        if (cx - size / 2 <= char_x <= cx + size / 2 and
-                cy - size / 2 <= char_y <= cy + size / 2):
+        if (cx - char_x) ** 2 + (cy - char_y) ** 2 <= (size + char_radius) ** 2:
             coins.remove(coin)
             score += 1
             print(f"Score: {score}")
@@ -215,14 +220,14 @@ def apply_physics(window):
 
     if is_jumping:
         char_y -= jump_velocity
-        jump_velocity -= gravity  # Apply gravity during the jump
+        jump_velocity -= gravity 
         if jump_velocity <= 0:
-            is_jumping = False  # Start falling when upward velocity reaches zero
-            fall_speed = 0  # Reset fall speed to start falling from current position
+            is_jumping = False 
+            fall_speed = 0 
         check_collision_and_update_position()
     else:
         if not is_on_platform:
-            # Apply gravity acceleration
+        
             fall_speed += gravity
             if fall_speed > max_fall_speed:
                 fall_speed = max_fall_speed
@@ -252,7 +257,7 @@ def render():
         color = coin['color']
         draw_circle(x, y, size, color)
     
-    # Render the score at the top left of the screen
+
     render_text(10, 20, 20, f"Score: {score}")
 
 def main():
