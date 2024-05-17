@@ -5,6 +5,7 @@ from OpenGL.GL import *
 from math import cos, sin
 import random
 
+# Game variables
 char_radius = 15
 char_x = 30
 char_y = 0
@@ -17,9 +18,11 @@ max_fall_speed = 10
 is_on_platform = False
 WIDTH, HEIGHT = 1920, 1080
 
-key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False}
+key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False, glfw.KEY_SPACE: False}
 
 score = 0
+game_won = False
+game_lost = False
 
 def init_window():
     if not glfw.init():
@@ -48,16 +51,38 @@ def init_opengl():
     glViewport(0, 0, WIDTH, HEIGHT)
     glOrtho(0, WIDTH, HEIGHT, 0, -1, 1)
 
-def game_over(window):
-    print("Game Over")
-    glfw.set_window_should_close(window, True)
+def reset_game():
+    global char_x, char_y, is_jumping, jump_velocity, fall_speed, is_on_platform, score, game_won, game_lost
+    global obstacles, coins
 
-def you_win(window):
+    char_x = 30
+    char_y = HEIGHT / 2 - char_radius
+    is_jumping = False
+    jump_velocity = 5
+    fall_speed = 0
+    is_on_platform = False
+    score = 0
+    game_won = False
+    game_lost = False
+    obstacles = generate_obstacles()
+    coins = generate_coins()
+
+def game_over():
+    global game_lost
+    if game_won or game_lost:
+        return
+    print("Game Over")
+    game_lost = True
+
+def you_win():
+    global game_won
+    if game_won or game_lost:
+        return
     print("You Win!!")
-    glfw.set_window_should_close(window, True)
+    game_won = True
 
 def key_input(window, key, scancode, action, mods):
-    global char_x, is_jumping, jump_velocity, is_on_platform
+    global is_jumping, jump_velocity, is_on_platform
 
     if action == glfw.PRESS:
         if key in key_state:
@@ -68,6 +93,8 @@ def key_input(window, key, scancode, action, mods):
             is_on_platform = False
         if key == glfw.KEY_ESCAPE:
             glfw.set_window_should_close(window, True)
+        if key == glfw.KEY_R:
+            reset_game()
 
     if action == glfw.RELEASE:
         if key in key_state:
@@ -189,10 +216,12 @@ def draw_platform(x, y, width, height, color):
     glEnd()
 
 def check_collision_and_update_position():
-    global char_x, char_y, char_radius, is_on_platform, fall_speed, score
+    if game_lost or game_won:
+        return
+    
+    global char_x, char_y, char_radius, is_on_platform, fall_speed, score, jump_velocity
 
     is_on_platform = False
-
 
     for platform in platforms:
         px, py = platform['position']
@@ -211,13 +240,15 @@ def check_collision_and_update_position():
         if platform_left <= char_x and char_x <= platform_right:
             if platform_top <= circle_top and circle_top <= platform_bottom:
                 char_y = platform_bottom + char_radius
-                fall_speed = 0  
+                fall_speed = 0 
+                jump_velocity = 0 
                 break
 
             if platform_top <= circle_bottom and circle_bottom <= platform_bottom:
                 char_y = platform_top - char_radius
                 is_on_platform = True
                 fall_speed = 0  
+                jump_velocity = 0 
                 break
             
         if platform_top <= char_y and char_y <= platform_bottom:
@@ -234,7 +265,7 @@ def check_collision_and_update_position():
         size = obstacle['size']
 
         if (ox - char_x) ** 2 + (oy - char_y) ** 2 <= (size + char_radius) ** 2:
-            game_over(glfw.get_current_context())
+            game_over()
             return
 
 
@@ -247,15 +278,24 @@ def check_collision_and_update_position():
             score += 1
             print(f"Score: {score}")
 
+    # Check for collision with the goal platform
+    goal_x, goal_y = goal_platform['position']
+    goal_w, goal_h = goal_platform['size']
+    if goal_x <= char_x <= goal_x + goal_w and goal_y <= char_y <= goal_y + goal_h:
+        you_win()
+
 def apply_physics(window):
-    global char_x, char_y, is_jumping, jump_velocity, fall_speed, gravity, max_fall_speed, move_speed
+    global char_x, char_y, is_jumping, jump_velocity, fall_speed, gravity, max_fall_speed, move_speed, is_on_platform
 
     if key_state[glfw.KEY_LEFT]:
         char_x -= move_speed
-        check_collision_and_update_position()
     if key_state[glfw.KEY_RIGHT]:
         char_x += move_speed
-        check_collision_and_update_position()
+
+    if key_state[glfw.KEY_SPACE] and is_on_platform and not is_jumping:
+        is_jumping = True
+        jump_velocity = 5
+        is_on_platform = False
 
     if is_jumping:
         char_y -= jump_velocity
@@ -263,20 +303,21 @@ def apply_physics(window):
         if jump_velocity <= 0:
             is_jumping = False 
             fall_speed = 0 
-        check_collision_and_update_position()
     else:
         if not is_on_platform:
-        
             fall_speed += gravity
             if fall_speed > max_fall_speed:
                 fall_speed = max_fall_speed
             char_y += fall_speed
-        check_collision_and_update_position()
+
+    check_collision_and_update_position()
 
     if char_y - char_radius > HEIGHT:
-        game_over(window)
+        game_over()
 
 def render():
+    global game_won, game_lost
+
     glClear(GL_COLOR_BUFFER_BIT)
     glClearColor(0.1, 0.1, 0.1, 1)
     draw_circle(char_x, char_y, char_radius, (0, 1, 0))
@@ -295,9 +336,16 @@ def render():
         size = coin['size']
         color = coin['color']
         draw_circle(x, y, size, color)
-    
 
     render_text(10, 20, 20, f"Score: {score}")
+
+    if game_won:
+        render_text(WIDTH // 2 - 50, HEIGHT // 2, 40, "You Win!")
+    if game_lost:
+        render_text(WIDTH // 2 - 50, HEIGHT // 2, 40, "You Lose")
+
+    if game_won or game_lost:
+        render_text(WIDTH // 2 - 100, HEIGHT // 2 + 50, 30, "Press R to Restart")
 
 def main():
     window = init_window()
