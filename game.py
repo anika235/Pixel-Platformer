@@ -1,8 +1,10 @@
+from PIL import Image
 import glfw
 from OpenGL.GL import *
 from math import cos, sin
 import random
 from eng import render_text
+import numpy as np
 
 # Constants
 WIDTH, HEIGHT = 1920, 1080
@@ -334,7 +336,6 @@ class App:
         glfw.set_window_pos(window, (screen_width - WIDTH) // 2, (screen_height - HEIGHT) // 2)
 
         glfw.set_key_callback(window, self.key_input_callback)
-
         return window
 
     def key_input_callback(self, window, key, scancode, action, mods):
