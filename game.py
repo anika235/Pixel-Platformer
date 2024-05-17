@@ -1,25 +1,45 @@
 import glfw
 from OpenGL.GL import *
 from math import cos, sin
+import random
 
-# Window dimensions
-WIDTH, HEIGHT = 800, 600
-char_radius = 15  # Character's radius
+# Character properties
+char_radius = 15
 char_x = 30
-char_y = HEIGHT/ 2 - char_radius  # Adjust initial y-coordinate
-move_speed = 5
-is_jumping = False  # Indicates if the character is currently jumping
-jump_height = 0  # The remaining height the character has to jump
+char_y = 0
+move_speed = 2
+is_jumping = False
+jump_height = 0
+gravity = 0.01
+fall_speed = 0  # Initial fall speed
+max_fall_speed = 10  # Maximum fall speed
+is_on_platform = False
+WIDTH, HEIGHT = 1920, 1080
 
+# Track key states
+key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False}
+
+# Score
+score = 0
 
 def init_window():
     if not glfw.init():
         raise Exception("glfw can not be initialized!")
-    window = glfw.create_window(WIDTH, HEIGHT, "Pixel Platformer", None, None)
+    
+    # Get the primary monitor and its video mode
+    monitor = glfw.get_primary_monitor()
+    video_mode = glfw.get_video_mode(monitor)
+    
+    global WIDTH, HEIGHT
+    WIDTH = video_mode.size.width
+    HEIGHT = video_mode.size.height
+    global char_y
+    char_y = HEIGHT / 2 - char_radius
+
+    window = glfw.create_window(WIDTH, HEIGHT, "Pixel Platformer", monitor, None)
     if not window:
         glfw.terminate()
         raise Exception("glfw window can not be created!")
-    glfw.set_window_pos(window, 400, 200)
     glfw.make_context_current(window)
     glfw.swap_interval(1)
     return window
@@ -37,20 +57,22 @@ def you_win(window):
     glfw.set_window_should_close(window, True)
 
 def key_input(window, key, scancode, action, mods):
-    global char_x, char_y
-    if action == glfw.PRESS or action == glfw.REPEAT:
-        if key == glfw.KEY_LEFT:
-            char_x -= move_speed
-        if key == glfw.KEY_RIGHT:
-            char_x += move_speed
-        if key == glfw.KEY_UP:
-            char_y -= move_speed
-        if key == glfw.KEY_DOWN:
-            char_y += move_speed
+    global char_x, is_jumping, jump_height, is_on_platform
+
+    if action == glfw.PRESS:
+        if key in key_state:
+            key_state[key] = True
+        if key == glfw.KEY_SPACE and is_on_platform and not is_jumping:
+            is_jumping = True
+            jump_height = 120
+            is_on_platform = False
         if key == glfw.KEY_ESCAPE:
             glfw.set_window_should_close(window, True)
 
-# Platforms defined by bottom-left corner, width, and height
+    if action == glfw.RELEASE:
+        if key in key_state:
+            key_state[key] = False
+
 platforms = [
     {'position': (500, 100), 'size': (120, 20), 'color': (0.6, 0.3, 0.1)},
     {'position': (580, 200), 'size': (120, 20), 'color': (0.5, 0.5, 0.1)},
@@ -68,21 +90,41 @@ platforms = [
     {'position': (280, 550), 'size': (120, 20), 'color': (0.3, 0.4, 0.5)}
 ]
 
-# Adding the goal platform
 goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)}  # Yellow color
 platforms.append(goal_platform)
 
+def generate_obstacles():
+    obstacles = []
+    for _ in range(5):
+        x = random.randint(0, WIDTH - 50)
+        y = random.randint(0, HEIGHT - 50)
+        size = 20
+        color = (1.0, 0.0, 0.0)  # Red color for obstacles
+        obstacles.append({'position': (x, y), 'size': size, 'color': color})
+    return obstacles
+
+def generate_coins():
+    coins = []
+    for _ in range(10):
+        x = random.randint(0, WIDTH - 20)
+        y = random.randint(0, HEIGHT - 20)
+        size = 10
+        color = (1.0, 1.0, 0.0)  # Yellow color for coins
+        coins.append({'position': (x, y), 'size': size, 'color': color})
+    return coins
+
+obstacles = generate_obstacles()
+coins = generate_coins()
 
 def draw_circle(cx, cy, radius, color, segments=32):
-    theta = 2 * 3.14159 / segments  # The angle between vertices
-    glColor3f(*color)  # Set the color of the circle
-    glBegin(GL_POLYGON)  # Start drawing a filled circle
+    theta = 2 * 3.14159 / segments
+    glColor3f(*color)
+    glBegin(GL_POLYGON)
     for i in range(segments):
-        x = radius * cos(i * theta)  # X coordinate
-        y = radius * sin(i * theta)  # Y coordinate
+        x = radius * cos(i * theta)
+        y = radius * sin(i * theta)
         glVertex2f(x + cx, y + cy)
     glEnd()
-
 
 def draw_platform(x, y, width, height, color):
     glBegin(GL_QUADS)
@@ -93,92 +135,115 @@ def draw_platform(x, y, width, height, color):
     glVertex2f(x, y + height)
     glEnd()
 
-def check_collision_and_update_position(window):
-    global char_y, move_speed, char_radius
+def check_collision_and_update_position():
+    global char_x, char_y, char_radius, is_on_platform, fall_speed, score
 
-    # Assume gravity pulls the character down each frame
-    new_y = char_y + move_speed
+    is_on_platform = False
 
-    # Detect collision with each platform
+    # Check collision with platforms
     for platform in platforms:
         px, py = platform['position']
         pw, ph = platform['size']
 
-        # Calculate platform edges
         platform_top = py
         platform_bottom = py + ph
         platform_left = px
         platform_right = px + pw
 
-        # Calculate circle edges
-        circle_bottom = new_y + char_radius
-        circle_top = new_y - char_radius
+        circle_bottom = char_y + char_radius
+        circle_top = char_y - char_radius
         circle_left = char_x - char_radius
         circle_right = char_x + char_radius
 
-        # Check horizontal and vertical bounds
-        if (circle_right > platform_left and circle_left < platform_right and
-            circle_bottom > platform_top and circle_top < platform_bottom):
+        if platform_left <= char_x and char_x <= platform_right:
+            if platform_top <= circle_top and circle_top <= platform_bottom:
+                char_y = platform_bottom + char_radius
+                fall_speed = 0  
+                break
 
-            # Check if this is the goal platform
-            if platform == goal_platform:
-                you_win(window)
-                return  # Stop further processing since game is won
+            if platform_top <= circle_bottom and circle_bottom <= platform_bottom:
+                char_y = platform_top - char_radius
+                is_on_platform = True
+                fall_speed = 0  
+                break
+            
+        if platform_top <= char_y and char_y <= platform_bottom:
+            if platform_left <= circle_left and circle_left <= platform_right:
+                char_x = platform_right + char_radius
+                break
+            if platform_left <= circle_right and circle_right <= platform_right:
+                char_x = platform_left - char_radius
+                break
 
-            # Circle is intersecting the platform, adjust position
-            if circle_bottom > platform_top and char_y + char_radius <= platform_top:
-                # The character is landing on the platform
-                new_y = platform_top - char_radius
-                break  # Correct the position and stop checking further
+    # Check collision with obstacles
+    for obstacle in obstacles:
+        ox, oy = obstacle['position']
+        size = obstacle['size']
 
-    # Update the character's position only if there's no intersection
-    char_y = new_y
+        if (ox - size / 2 <= char_x <= ox + size / 2 and
+                oy - size / 2 <= char_y <= oy + size / 2):
+            game_over(glfw.get_current_context())
+            return
 
+    # Check collision with coins
+    for coin in coins[:]:
+        cx, cy = coin['position']
+        size = coin['size']
 
-
-def key_input(window, key, scancode, action, mods):
-    global char_x, char_y, is_jumping, jump_height
-    if action == glfw.PRESS:  # Trigger on the initial press to avoid repeating the jump due to key repeat
-        if key == glfw.KEY_LEFT:
-            char_x -= move_speed
-        if key == glfw.KEY_RIGHT:
-            char_x += move_speed
-        if key == glfw.KEY_SPACE and not is_jumping:  # Start jumping only if not already jumping
-            is_jumping = True
-            jump_height = 80  # Set how high the jump should be
-        if key == glfw.KEY_ESCAPE:
-            glfw.set_window_should_close(window, True)
-
+        if (cx - size / 2 <= char_x <= cx + size / 2 and
+                cy - size / 2 <= char_y <= cy + size / 2):
+            coins.remove(coin)
+            score += 1
+            print(f"Score: {score}")
 
 def apply_physics(window):
-    global char_y, is_jumping, jump_height
+    global char_x, char_y, is_jumping, jump_height, fall_speed, gravity, max_fall_speed, move_speed
+
+    if key_state[glfw.KEY_LEFT]:
+        char_x -= move_speed
+        check_collision_and_update_position()
+    if key_state[glfw.KEY_RIGHT]:
+        char_x += move_speed
+        check_collision_and_update_position()
 
     if is_jumping:
         if jump_height > 0:
-            char_y -= 10  # Move up by 10 pixels per frame
-            jump_height -= 10
+            char_y -= 5
+            jump_height -= 5
+            check_collision_and_update_position()
         else:
             is_jumping = False
     else:
-        # Apply gravity if not jumping and check for goal collision
-        check_collision_and_update_position(window)
+        if not is_on_platform:
+            # Apply gravity acceleration
+            fall_speed += gravity
+            if fall_speed > max_fall_speed:
+                fall_speed = max_fall_speed
+            char_y += fall_speed
+        check_collision_and_update_position()
 
     if char_y - char_radius > HEIGHT:
         game_over(window)
 
-
 def render():
     glClear(GL_COLOR_BUFFER_BIT)
     glClearColor(0.1, 0.1, 0.1, 1)
-    # Draw character as a circle
     draw_circle(char_x, char_y, char_radius, (1, 0, 0))
-    # Draw platforms
     for platform in platforms:
         x, y = platform['position']
         width, height = platform['size']
         color = platform['color']
         draw_platform(x, y, width, height, color)
-
+    for obstacle in obstacles:
+        x, y = obstacle['position']
+        size = obstacle['size']
+        color = obstacle['color']
+        draw_circle(x, y, size, color)
+    for coin in coins:
+        x, y = coin['position']
+        size = coin['size']
+        color = coin['color']
+        draw_circle(x, y, size, color)
 
 def main():
     window = init_window()
@@ -186,12 +251,10 @@ def main():
     glfw.set_key_callback(window, key_input)
     while not glfw.window_should_close(window):
         glfw.poll_events()
-        apply_physics(window)  # Pass the window to the function
+        apply_physics(window)
         render()
         glfw.swap_buffers(window)
     glfw.terminate()
-
-
 
 if __name__ == "__main__":
     main()
