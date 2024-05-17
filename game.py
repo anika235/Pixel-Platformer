@@ -51,6 +51,14 @@ class Game:
                 return True
         return False
 
+    def is_overlapping_platforms(self, x, y, size):
+        for platform in self.platforms:
+            px, py = platform['position']
+            pw, ph = platform['size']
+            if (px - size <= x <= px + pw + size) and (py - size <= y <= py + ph + size):
+                return True
+        return False
+
     def generate_obstacles_and_coins(self):
         self.obstacles = self.generate_objects(5, 20, (1.0, 0.0, 0.0), [])
         self.coins = self.generate_objects(10, 10, (1.0, 1.0, 0.0), self.obstacles)
@@ -61,7 +69,7 @@ class Game:
             while True:
                 x = random.randint(0, WIDTH - size)
                 y = random.randint(0, HEIGHT - size)
-                if not self.is_overlapping(x, y, size, objects) and not self.is_overlapping(x, y, size, other_objects):
+                if not self.is_overlapping(x, y, size, objects) and not self.is_overlapping(x, y, size, other_objects) and not self.is_overlapping_platforms(x, y, size):
                     objects.append({'position': (x, y), 'size': size, 'color': color})
                     break
         return objects
