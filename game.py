@@ -3,22 +3,19 @@ from OpenGL.GL import *
 from math import cos, sin
 import random
 
-
 char_radius = 15
 char_x = 30
 char_y = 0
 move_speed = 2
 is_jumping = False
-jump_velocity = 5  
+jump_velocity = 5 
 gravity = 0.1
-fall_speed = 0  
-max_fall_speed = 10  
+fall_speed = 0 
+max_fall_speed = 10 
 is_on_platform = False
 WIDTH, HEIGHT = 1920, 1080
 
-
 key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False}
-
 
 score = 0
 
@@ -31,12 +28,16 @@ def init_window():
     global char_y
     char_y = HEIGHT / 2 - char_radius
 
+
+    glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
+    
     window = glfw.create_window(WIDTH, HEIGHT, "Pixel Platformer", None, None)
     if not window:
         glfw.terminate()
         raise Exception("glfw window can not be created!")
     glfw.make_context_current(window)
     glfw.swap_interval(1)
+
 
     screen_width = glfw.get_video_mode(glfw.get_primary_monitor()).size.width
     screen_height = glfw.get_video_mode(glfw.get_primary_monitor()).size.height
@@ -89,7 +90,7 @@ platforms = [
     {'position': (280, 550), 'size': (120, 20), 'color': (0.3, 0.4, 0.5)}
 ]
 
-goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)}  
+goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)} 
 platforms.append(goal_platform)
 
 def generate_obstacles():
@@ -98,7 +99,7 @@ def generate_obstacles():
         x = random.randint(0, WIDTH - 50)
         y = random.randint(0, HEIGHT - 50)
         size = 20
-        color = (1.0, 0.0, 0.0)  
+        color = (1.0, 0.0, 0.0) 
         obstacles.append({'position': (x, y), 'size': size, 'color': color})
     return obstacles
 
@@ -108,7 +109,7 @@ def generate_coins():
         x = random.randint(0, WIDTH - 20)
         y = random.randint(0, HEIGHT - 20)
         size = 10
-        color = (1.0, 1.0, 0.0)  
+        color = (1.0, 1.0, 0.0) 
         coins.append({'position': (x, y), 'size': size, 'color': color})
     return coins
 
@@ -139,7 +140,7 @@ def check_collision_and_update_position():
 
     is_on_platform = False
 
-    
+
     for platform in platforms:
         px, py = platform['position']
         pw, ph = platform['size']
@@ -174,7 +175,7 @@ def check_collision_and_update_position():
                 char_x = platform_left - char_radius
                 break
 
-    
+
     for obstacle in obstacles:
         ox, oy = obstacle['position']
         size = obstacle['size']
@@ -184,7 +185,7 @@ def check_collision_and_update_position():
             game_over(glfw.get_current_context())
             return
 
-    
+
     for coin in coins[:]:
         cx, cy = coin['position']
         size = coin['size']
@@ -207,14 +208,14 @@ def apply_physics(window):
 
     if is_jumping:
         char_y -= jump_velocity
-        jump_velocity -= gravity  
+        jump_velocity -= gravity 
         if jump_velocity <= 0:
-            is_jumping = False  
-            fall_speed = 0  
+            is_jumping = False 
+            fall_speed = 0 
         check_collision_and_update_position()
     else:
         if not is_on_platform:
-            
+        
             fall_speed += gravity
             if fall_speed > max_fall_speed:
                 fall_speed = max_fall_speed
