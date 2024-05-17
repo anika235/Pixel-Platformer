@@ -1,22 +1,28 @@
+# Import the necessary functions from eng.py
+from eng import render_text
+
 import glfw
 from OpenGL.GL import *
 from math import cos, sin
 import random
 
+# Character properties
 char_radius = 15
 char_x = 30
 char_y = 0
 move_speed = 2
 is_jumping = False
-jump_velocity = 5 
+jump_velocity = 5  # Initial upward velocity for jumping
 gravity = 0.1
-fall_speed = 0 
-max_fall_speed = 10 
+fall_speed = 0  # Initial fall speed
+max_fall_speed = 10  # Maximum fall speed
 is_on_platform = False
-WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = 800, 600
 
+# Track key states
 key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False}
 
+# Score
 score = 0
 
 def init_window():
@@ -24,11 +30,12 @@ def init_window():
         raise Exception("glfw can not be initialized!")
     
     global WIDTH, HEIGHT
-    HEIGHT -= 70
+    WIDTH = 800
+    HEIGHT = 600
     global char_y
     char_y = HEIGHT / 2 - char_radius
 
-
+    # Disable window resizing
     glfw.window_hint(glfw.RESIZABLE, glfw.FALSE)
     
     window = glfw.create_window(WIDTH, HEIGHT, "Pixel Platformer", None, None)
@@ -38,7 +45,7 @@ def init_window():
     glfw.make_context_current(window)
     glfw.swap_interval(1)
 
-
+    # Get screen dimensions to center the window
     screen_width = glfw.get_video_mode(glfw.get_primary_monitor()).size.width
     screen_height = glfw.get_video_mode(glfw.get_primary_monitor()).size.height
     glfw.set_window_pos(window, (screen_width - WIDTH) // 2, (screen_height - HEIGHT) // 2)
@@ -90,7 +97,7 @@ platforms = [
     {'position': (280, 550), 'size': (120, 20), 'color': (0.3, 0.4, 0.5)}
 ]
 
-goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)} 
+goal_platform = {'position': (780, 0), 'size': (20, 50), 'color': (1.0, 1.0, 0.0)}  # Yellow color
 platforms.append(goal_platform)
 
 def generate_obstacles():
@@ -99,7 +106,7 @@ def generate_obstacles():
         x = random.randint(0, WIDTH - 50)
         y = random.randint(0, HEIGHT - 50)
         size = 20
-        color = (1.0, 0.0, 0.0) 
+        color = (1.0, 0.0, 0.0)  # Red color for obstacles
         obstacles.append({'position': (x, y), 'size': size, 'color': color})
     return obstacles
 
@@ -109,7 +116,7 @@ def generate_coins():
         x = random.randint(0, WIDTH - 20)
         y = random.randint(0, HEIGHT - 20)
         size = 10
-        color = (1.0, 1.0, 0.0) 
+        color = (1.0, 1.0, 0.0)  # Yellow color for coins
         coins.append({'position': (x, y), 'size': size, 'color': color})
     return coins
 
@@ -140,7 +147,7 @@ def check_collision_and_update_position():
 
     is_on_platform = False
 
-
+    # Check collision with platforms
     for platform in platforms:
         px, py = platform['position']
         pw, ph = platform['size']
@@ -175,7 +182,7 @@ def check_collision_and_update_position():
                 char_x = platform_left - char_radius
                 break
 
-
+    # Check collision with obstacles
     for obstacle in obstacles:
         ox, oy = obstacle['position']
         size = obstacle['size']
@@ -185,7 +192,7 @@ def check_collision_and_update_position():
             game_over(glfw.get_current_context())
             return
 
-
+    # Check collision with coins
     for coin in coins[:]:
         cx, cy = coin['position']
         size = coin['size']
@@ -208,14 +215,14 @@ def apply_physics(window):
 
     if is_jumping:
         char_y -= jump_velocity
-        jump_velocity -= gravity 
+        jump_velocity -= gravity  # Apply gravity during the jump
         if jump_velocity <= 0:
-            is_jumping = False 
-            fall_speed = 0 
+            is_jumping = False  # Start falling when upward velocity reaches zero
+            fall_speed = 0  # Reset fall speed to start falling from current position
         check_collision_and_update_position()
     else:
         if not is_on_platform:
-        
+            # Apply gravity acceleration
             fall_speed += gravity
             if fall_speed > max_fall_speed:
                 fall_speed = max_fall_speed
@@ -244,6 +251,9 @@ def render():
         size = coin['size']
         color = coin['color']
         draw_circle(x, y, size, color)
+    
+    # Render the score at the top left of the screen
+    render_text(10, 20, 20, f"Score: {score}")
 
 def main():
     window = init_window()
