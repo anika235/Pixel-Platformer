@@ -248,8 +248,8 @@ class Game:
             self.draw_circle(x, y, size, color)
 
         render_text(10, 20, 20, f"Score: {self.score}")
-        render_text(10, HEIGHT - 30, 20, "Press 'M' to go back to Menu")
-        render_text(10, HEIGHT - 60, 20, "Press 'P' to Pause/Resume")
+        render_text(10, HEIGHT - 60, 20, "Press 'M' to go back to Menu")
+        render_text(10, HEIGHT - 90, 20, "Press 'P' to Pause/Resume")
 
         if self.game_won:
             render_text(WIDTH // 2 - 50, HEIGHT // 2, 40, "You Win!")
