@@ -240,7 +240,7 @@ def apply_physics(window):
 def render():
     glClear(GL_COLOR_BUFFER_BIT)
     glClearColor(0.1, 0.1, 0.1, 1)
-    draw_circle(char_x, char_y, char_radius, (1, 0, 0))
+    draw_circle(char_x, char_y, char_radius, (0, 1, 0))
     for platform in platforms:
         x, y = platform['position']
         width, height = platform['size']
