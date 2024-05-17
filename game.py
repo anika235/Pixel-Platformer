@@ -27,7 +27,6 @@ def init_window():
         raise Exception("glfw can not be initialized!")
     
     global WIDTH, HEIGHT
-    # WIDTH = 800
     HEIGHT -= 70
     global char_y
     char_y = HEIGHT / 2 - char_radius
@@ -39,7 +38,6 @@ def init_window():
     glfw.make_context_current(window)
     glfw.swap_interval(1)
 
-    # Get screen dimensions to center the window
     screen_width = glfw.get_video_mode(glfw.get_primary_monitor()).size.width
     screen_height = glfw.get_video_mode(glfw.get_primary_monitor()).size.height
     glfw.set_window_pos(window, (screen_width - WIDTH) // 2, (screen_height - HEIGHT) // 2)
