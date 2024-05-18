@@ -390,6 +390,27 @@ def render_text(x, y, height, text):
 
     glEnd()
     
+def render_text_with_density(x, y, height, text, density=2):
+    glColor3ub(255, 255, 255)  # Set the fixed color to white
+    glPointSize(2)
+    glBegin(GL_POINTS)
+    
+    scale = height / 7
+    start_x = x
+    
+    for char in text:
+        bitmap = get_char_bitmap(char)
+        for row in range(7):
+            bits = bitmap[row]
+            for col in range(5):
+                if bits & (1 << (4 - col)):
+                    for dy in range(density):
+                        for dx in range(density):
+                            glVertex2f(x + (col * density + dx) * (scale / density), y + (row * density + dy) * (scale / density))
+        x += 6 * scale  
+
+    glEnd()
+
 def get_random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 

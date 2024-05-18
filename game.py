@@ -3,7 +3,7 @@ import glfw
 from OpenGL.GL import *
 from math import cos, sin
 import random
-from eng import render_text, render_text_with_random_colors
+from eng import render_text, render_text_with_random_colors, render_text_with_density
 import numpy as np
 
 WIDTH, HEIGHT = 1920, 1080
@@ -21,7 +21,6 @@ class Button:
         self.state = 'normal' 
     
     def is_hovered(self, mouse_x, mouse_y):
-        print(self.x, self.y, mouse_x, mouse_y)
         return self.x <= mouse_x <= self.x + self.width and self.y - self.height // 2 <= mouse_y <= self.y + self.height // 2
     
     def draw(self):
@@ -344,12 +343,12 @@ class Game:
         render_text(10, HEIGHT - 90, 20, "Press 'P' to Pause/Resume")
 
         if self.game_won:
-            render_text(WIDTH // 2 - 50, HEIGHT // 2, 40, "You Win!")
+            render_text_with_random_colors(WIDTH // 2 - 100, HEIGHT // 2, 80, "You Win!", density=3)
         if self.game_lost:
-            render_text(WIDTH // 2 - 50, HEIGHT // 2, 40, "You Lose")
+            render_text_with_density(WIDTH // 2 - 100, HEIGHT // 2, 80, "You Lose", density=3)
 
         if self.game_won or self.game_lost:
-            render_text(WIDTH // 2 - 100, HEIGHT // 2 + 50, 30, "Press R to Restart")
+            render_text_with_density(WIDTH // 2 - 150, HEIGHT // 2 + 100, 40, "Press R to Restart", density=2)
 
 class Menu:
     def __init__(self):
