@@ -1,8 +1,7 @@
-import glfw
 from OpenGL.GL import *
-import math
 import random
 
+# Define a bitmap font for rendering text
 font = {
     'A': [
         0b01110,
@@ -385,16 +384,34 @@ font = {
 }
 
 def get_char_bitmap(char):
+    """
+    Get the bitmap representation of a character.
+
+    Parameters:
+    char (str): The character to get the bitmap for.
+
+    Returns:
+    list: A list of integers representing the bitmap of the character.
+    """
     return font.get(char.upper(), [0] * 7)  
 
 rev = False
 
 def render_text(x, y, height, text):
+    """
+    Render text at a specified position with a specified height.
+
+    Parameters:
+    x (float): The x-coordinate of the text position.
+    y (float): The y-coordinate of the text position.
+    height (float): The height of the text.
+    text (str): The text to render.
+    """
     glColor3ub(255, 255, 255)
     glPointSize(3)
     glBegin(GL_POINTS)
     
-    scale = height / 7  
+    scale = height / 7  # Scale the text height
     start_x = x
     
     for char in text:
@@ -404,16 +421,26 @@ def render_text(x, y, height, text):
             for col in range(5):
                 if bits & (1 << (4 - col)):
                     glVertex2f(x + col * scale, y + row * scale)
-        x += 6 * scale  
+        x += 6 * scale  # Move to the next character position
 
     glEnd()
     
 def render_text_with_density(x, y, height, text, density=2):
+    """
+    Render text with specified density.
+
+    Parameters:
+    x (float): The x-coordinate of the text position.
+    y (float): The y-coordinate of the text position.
+    height (float): The height of the text.
+    text (str): The text to render.
+    density (int): The density of the text rendering.
+    """
     glColor3ub(255, 255, 255)  # Set the fixed color to white
     glPointSize(2)
     glBegin(GL_POINTS)
     
-    scale = height / 7
+    scale = height / 7  # Scale the text height
     start_x = x
     
     for char in text:
@@ -425,18 +452,34 @@ def render_text_with_density(x, y, height, text, density=2):
                     for dy in range(density):
                         for dx in range(density):
                             glVertex2f(x + (col * density + dx) * (scale / density), y + (row * density + dy) * (scale / density))
-        x += 6 * scale  
+        x += 6 * scale  # Move to the next character position
 
     glEnd()
 
 def get_random_color():
+    """
+    Generate a random color.
+
+    Returns:
+    tuple: A tuple containing three integers representing an RGB color.
+    """
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 def render_text_with_random_colors(x, y, height, text, density=3):
+    """
+    Render text with random colors for each pixel.
+
+    Parameters:
+    x (float): The x-coordinate of the text position.
+    y (float): The y-coordinate of the text position.
+    height (float): The height of the text.
+    text (str): The text to render.
+    density (int): The density of the text rendering.
+    """
     glPointSize(2)
     glBegin(GL_POINTS)
     
-    scale = height / 7
+    scale = height / 7  # Scale the text height
     start_x = x
     
     for char in text:
@@ -450,6 +493,6 @@ def render_text_with_random_colors(x, y, height, text, density=3):
                             r, g, b = get_random_color()
                             glColor3ub(r, g, b)
                             glVertex2f(x + (col * density + dx) * (scale / density), y + (row * density + dy) * (scale / density))
-        x += 6 * scale  
+        x += 6 * scale  # Move to the next character position
 
     glEnd()

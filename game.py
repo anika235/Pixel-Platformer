@@ -4,6 +4,7 @@ from math import cos, sin
 import random
 from eng import render_text, render_text_with_random_colors, render_text_with_density
 
+# Constants for window dimensions and high scores
 WIDTH, HEIGHT = 1920, 1080
 TITLE_BAR_HEIGHT = 50
 HIGH_SCORES_FILE = 'high_scores.txt'
@@ -11,24 +12,28 @@ MAX_HIGH_SCORES = 5
 
 class Button:
     def __init__(self, x, y, width, height, label):
+        """Initialize a button with position, size, and label."""
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.label = label
-        self.state = 'normal' 
+        self.state = 'normal'  # States: 'normal', 'hovered', 'clicked'
     
     def is_hovered(self, mouse_x, mouse_y):
+        """Check if the button is hovered by the mouse cursor."""
         return self.x <= mouse_x <= self.x + self.width and self.y - self.height // 2 <= mouse_y <= self.y + self.height // 2
     
     def draw(self):
+        """Render the button based on its state."""
         if self.state == 'normal':
-            glColor3f(0.5, 0.5, 0.5) 
+            glColor3f(0.5, 0.5, 0.5)  # Gray color for normal state
         elif self.state == 'hovered':
-            glColor3f(0.7, 0.7, 0.7) 
+            glColor3f(0.7, 0.7, 0.7)  # Light gray for hovered state
         elif self.state == 'clicked':
-            glColor3f(0.3, 0.3, 0.3) 
+            glColor3f(0.3, 0.3, 0.3)  # Dark gray for clicked state
         
+        # Draw the button as a rectangle
         glBegin(GL_QUADS)
         glVertex2f(self.x, self.y)
         glVertex2f(self.x + self.width, self.y)
@@ -36,11 +41,13 @@ class Button:
         glVertex2f(self.x, self.y + self.height)
         glEnd()
 
-        glColor3f(1.0, 1.0, 1.0) 
+        # Render the button label
+        glColor3f(1.0, 1.0, 1.0)  # White color for text
         render_text(self.x + 10, self.y + 10, self.height - 20, self.label)
 
 class Game:
     def __init__(self, level):
+        """Initialize the game with the specified difficulty level."""
         self.level = level
         self.char_radius = 15
         self.char_x = 30
@@ -59,16 +66,18 @@ class Game:
         self.game_won = False
         self.game_lost = False
 
+        # Load platforms based on difficulty level
         if self.level == 'easy':
             self.platforms = self.load_platforms('platforms_level1.txt')
         else:
             self.platforms = self.load_platforms('platforms_level2.txt')
-            
+        
         self.obstacles = []
         self.coins = []
         self.generate_obstacles_and_coins()
 
     def load_platforms(self, filename):
+        """Load platform data from a file."""
         platforms = []
         with open(filename, 'r') as file:
             for line in file:
@@ -82,6 +91,7 @@ class Game:
         return platforms
 
     def update_platform_positions(self):
+        """Update the positions of moving platforms."""
         for platform in self.platforms:
             if platform['move']: 
                 px, py = platform['position']
@@ -89,14 +99,13 @@ class Game:
                 move_offset = platform['move_offset']
                 move_distance = platform['move_distance']
 
-            
-                if direction == 1: 
+                if direction == 1:  # Move right
                     px += 1
                     move_offset += 1
                     platform['velocity'] = 1
                     if move_offset >= move_distance:
                         platform['direction'] = -1
-                else: 
+                else:  # Move left
                     px -= 1
                     move_offset -= 1
                     platform['velocity'] = -1
@@ -109,6 +118,7 @@ class Game:
                 platform['velocity'] = 0
 
     def is_overlapping(self, x, y, size, objects):
+        """Check if a point is overlapping with any object."""
         for obj in objects:
             ox, oy = obj['position']
             osize = obj['size']
@@ -117,6 +127,7 @@ class Game:
         return False
 
     def is_overlapping_platforms(self, x, y, size):
+        """Check if a point is overlapping with any platform."""
         for platform in self.platforms:
             px, py = platform['position']
             pw, ph = platform['size']
@@ -125,10 +136,12 @@ class Game:
         return False
 
     def generate_obstacles_and_coins(self):
+        """Generate obstacles and coins for the game."""
         self.obstacles = self.generate_objects(5, 20, (1.0, 0.0, 0.0), [])
         self.coins = self.generate_objects(10, 10, (1.0, 1.0, 0.0), self.obstacles)
 
     def generate_objects(self, count, size, color, other_objects):
+        """Generate objects (obstacles or coins) avoiding overlap."""
         objects = []
         for _ in range(count):
             while True:
@@ -140,6 +153,7 @@ class Game:
         return objects
 
     def reset_game(self):
+        """Reset the game to its initial state."""
         self.char_x = 30
         self.char_y = (HEIGHT - TITLE_BAR_HEIGHT) // 2 - self.char_radius
         self.is_jumping = False
@@ -154,13 +168,14 @@ class Game:
         self.generate_obstacles_and_coins()
 
     def game_over(self):
+        """Handle game over condition."""
         if self.game_won or self.game_lost:
             return
         print("Game Over")
         self.game_lost = True
-    
 
     def you_win(self):
+        """Handle winning the game."""
         if self.game_won or self.game_lost:
             return
         print("You Win!!")
@@ -168,6 +183,7 @@ class Game:
         app.menu.save_high_score(self.score, self.level)
 
     def key_input(self, window, key, scancode, action, mods):
+        """Handle keyboard input."""
         if action == glfw.PRESS:
             if key in self.key_state:
                 self.key_state[key] = True
@@ -194,6 +210,7 @@ class Game:
                 self.key_state[key] = False
 
     def check_collision_and_update_position(self):
+        """Check for collisions and update character's position."""
         if self.game_lost or self.game_won:
             return
 
@@ -260,6 +277,7 @@ class Game:
                 print(f"Score: {self.score}")
 
     def apply_physics(self):
+        """Apply game physics including movement, jumping, and gravity."""
         if self.key_state[glfw.KEY_LEFT]:
             self.char_x -= self.move_speed
         if self.key_state[glfw.KEY_RIGHT]:
@@ -286,10 +304,7 @@ class Game:
                 self.char_y += self.fall_speed
 
         if self.is_on_platform and self.current_platform and self.current_platform['velocity'] != 0:
-            if self.current_platform['velocity'] > 0:
-                self.char_x += 2 * self.current_platform['velocity']
-            else:
-                self.char_x += 2 * self.current_platform['velocity']
+            self.char_x += 2 * self.current_platform['velocity']
 
         self.check_collision_and_update_position()
         self.update_platform_positions()
@@ -298,6 +313,7 @@ class Game:
             self.game_over()
         
     def draw_circle(self, cx, cy, radius, color, segments=32):
+        """Draw a circle using OpenGL."""
         theta = 2 * 3.14159 / segments
         glColor3f(*color)
         glBegin(GL_POLYGON)
@@ -308,6 +324,7 @@ class Game:
         glEnd()
 
     def draw_platform(self, x, y, width, height, color):
+        """Draw a platform using OpenGL."""
         glBegin(GL_QUADS)
         glColor3f(*color)
         glVertex2f(x, y)
@@ -317,6 +334,7 @@ class Game:
         glEnd()
 
     def render(self):
+        """Render the game screen."""
         glClear(GL_COLOR_BUFFER_BIT)
         glClearColor(0.1, 0.1, 0.1, 1)
         self.draw_circle(self.char_x, self.char_y, self.char_radius, (0, 1, 0))
@@ -350,6 +368,7 @@ class Game:
 
 class Menu:
     def __init__(self):
+        """Initialize the game menu and load high scores."""
         self.high_scores_easy = self.load_high_scores('high_scores_easy.txt')
         self.high_scores_hard = self.load_high_scores('high_scores_hard.txt')
         self.selected_level = None
@@ -360,6 +379,7 @@ class Menu:
         }
 
     def load_high_scores(self, filename):
+        """Load high scores from a file."""
         try:
             with open(filename, 'r') as file:
                 scores = [int(line.strip()) for line in file.readlines()]
@@ -369,6 +389,7 @@ class Menu:
             return []
 
     def save_high_score(self, score, level):
+        """Save a high score for the specified level."""
         if level == 'easy':
             self.high_scores_easy.append(score)
             self.high_scores_easy.sort(reverse=True)
@@ -381,11 +402,13 @@ class Menu:
             self.save_scores_to_file(self.high_scores_hard, 'high_scores_hard.txt')
 
     def save_scores_to_file(self, scores, filename):
+        """Save high scores to a file."""
         with open(filename, 'w') as file:
             for score in scores:
                 file.write(f"{score}\n")
 
     def render(self):
+        """Render the menu screen."""
         glClear(GL_COLOR_BUFFER_BIT)
         glClearColor(0.1, 0.1, 0.1, 1)
         START = WIDTH // 2 + 200
@@ -394,7 +417,6 @@ class Menu:
         render_text_with_random_colors(START - 50, END - 100, 40, "Pixel Platformer")
         render_text(START - 50, END, 30, "Choose Your Difficulty!")
 
-    
         for button in self.buttons.values():
             button.draw()
 
@@ -406,7 +428,6 @@ class Menu:
         for i, score in enumerate(self.high_scores_hard):
             render_text(START - 50, END + 450 + i * 40, 30, f"{i + 1}. {score}")
 
-    
         instructions_start_x = 50
         instructions_start_y = 250
         render_text(instructions_start_x, instructions_start_y, 30, "Instructions:")
@@ -419,9 +440,10 @@ class Menu:
         render_text(instructions_start_x, instructions_start_y + 280, 20, "7. Press 'P' to Pause/Resume the game.")
 
     def mouse_input(self, window, button, action, mods):
+        """Handle mouse input for the menu."""
         if action == glfw.PRESS and button == glfw.MOUSE_BUTTON_LEFT:
             xpos, ypos = glfw.get_cursor_pos(window)
-            ypos = ypos 
+            ypos = ypos
 
             for key, button in self.buttons.items():
                 if button.is_hovered(xpos, ypos):
@@ -430,8 +452,9 @@ class Menu:
                     app.current_screen = 'game'
                     app.start_game()
                     break
-                
+
     def key_input(self, window, key, scancode, action, mods):
+        """Handle keyboard input for the menu."""
         if action == glfw.PRESS and key == glfw.KEY_ENTER:
             app.current_screen = 'game'
             app.game.reset_game()
@@ -439,7 +462,8 @@ class Menu:
             glfw.set_window_should_close(window, True)
 
     def mouse_move(self, window, xpos, ypos):
-        ypos = ypos 
+        """Handle mouse movement for the menu."""
+        ypos = ypos
         for button in self.buttons.values():
             if button.is_hovered(xpos, ypos):
                 button.state = 'hovered'
@@ -448,12 +472,14 @@ class Menu:
 
 class App:
     def __init__(self):
+        """Initialize the application and set up the game menu."""
         self.menu = Menu()
         self.current_screen = 'menu'
         self.window = self.init_window()
         self.init_opengl()
 
     def init_window(self):
+        """Initialize the GLFW window."""
         if not glfw.init():
             raise Exception("glfw can not be initialized!")
         
@@ -474,6 +500,7 @@ class App:
         return window
 
     def key_input_callback(self, window, key, scancode, action, mods):
+        """Handle global key input events."""
         if self.current_screen == 'menu':
             self.menu.key_input(window, key, scancode, action, mods)
         elif self.current_screen == 'paused':
@@ -487,22 +514,27 @@ class App:
             self.game.key_input(window, key, scancode, action, mods)
 
     def mouse_input_callback(self, window, button, action, mods):
+        """Handle global mouse input events."""
         if self.current_screen == 'menu':
             self.menu.mouse_input(window, button, action, mods)
 
     def mouse_move_callback(self, window, xpos, ypos):
+        """Handle global mouse movement events."""
         if self.current_screen == 'menu':
             self.menu.mouse_move(window, xpos, ypos)
 
     def init_opengl(self):
+        """Initialize OpenGL settings."""
         glViewport(0, 0, WIDTH, HEIGHT)
         glOrtho(0, WIDTH, HEIGHT, 0, -1, 1)
 
     def start_game(self):
+        """Start the game with the selected difficulty level."""
         level = self.menu.selected_level
         self.game = Game(level)
 
     def main_loop(self):
+        """Main loop to render the current screen and handle events."""
         while not glfw.window_should_close(self.window):
             glfw.poll_events()
             if self.current_screen == 'menu':
@@ -516,6 +548,7 @@ class App:
         glfw.terminate()
 
     def render_pause_screen(self):
+        """Render the pause screen."""
         glClear(GL_COLOR_BUFFER_BIT)
         glClearColor(0.1, 0.1, 0.1, 1)
         render_text(WIDTH // 2 - 50, HEIGHT // 2 - 100, 40, "Game Paused")
