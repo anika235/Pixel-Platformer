@@ -3,7 +3,7 @@ import glfw
 from OpenGL.GL import *
 from math import cos, sin
 import random
-from eng import render_text
+from eng import render_text, render_text_with_random_colors
 import numpy as np
 
 WIDTH, HEIGHT = 1920, 1080
@@ -394,7 +394,7 @@ class Menu:
         START = WIDTH // 2 + 200
         END = HEIGHT // 2 - 200
 
-        render_text(START - 50, END - 100, 40, "Pixel Platformer")
+        render_text_with_random_colors(START - 50, END - 100, 40, "Pixel Platformer")
         render_text(START - 50, END, 30, "Choose Your Difficulty!")
 
     

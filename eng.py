@@ -389,3 +389,28 @@ def render_text(x, y, height, text):
         x += 6 * scale  
 
     glEnd()
+    
+def get_random_color():
+    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+def render_text_with_random_colors(x, y, height, text, density=3):
+    glPointSize(2)
+    glBegin(GL_POINTS)
+    
+    scale = height / 7
+    start_x = x
+    
+    for char in text:
+        bitmap = get_char_bitmap(char)
+        for row in range(7):
+            bits = bitmap[row]
+            for col in range(5):
+                if bits & (1 << (4 - col)):
+                    for dy in range(density):
+                        for dx in range(density):
+                            r, g, b = get_random_color()
+                            glColor3ub(r, g, b)
+                            glVertex2f(x + (col * density + dx) * (scale / density), y + (row * density + dy) * (scale / density))
+        x += 6 * scale  
+
+    glEnd()
