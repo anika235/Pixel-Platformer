@@ -150,6 +150,8 @@ class Game:
             while True:
                 x = random.randint(100, WIDTH - size)
                 y = random.randint(0, HEIGHT - size - 100)
+                if 0 <= x <= 35 and -HEIGHT // 2 <= y <= -HEIGHT:
+                    continue
                 if not self.is_overlapping(x, y, size, objects) and not self.is_overlapping(x, y, size, other_objects) and not self.is_overlapping_platforms(x, y, size):
                     objects.append({'position': (x, y), 'size': size, 'color': color})
                     break
