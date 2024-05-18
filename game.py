@@ -6,14 +6,45 @@ import random
 from eng import render_text
 import numpy as np
 
-# Constants
 WIDTH, HEIGHT = 1920, 1080
 TITLE_BAR_HEIGHT = 50
 HIGH_SCORES_FILE = 'high_scores.txt'
 MAX_HIGH_SCORES = 5
 
+class Button:
+    def __init__(self, x, y, width, height, label):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.label = label
+        self.state = 'normal' 
+    
+    def is_hovered(self, mouse_x, mouse_y):
+        print(self.x, self.y, mouse_x, mouse_y)
+        return self.x <= mouse_x <= self.x + self.width and self.y - self.height // 2 <= mouse_y <= self.y + self.height // 2
+    
+    def draw(self):
+        if self.state == 'normal':
+            glColor3f(0.5, 0.5, 0.5) 
+        elif self.state == 'hovered':
+            glColor3f(0.7, 0.7, 0.7) 
+        elif self.state == 'clicked':
+            glColor3f(0.3, 0.3, 0.3) 
+        
+        glBegin(GL_QUADS)
+        glVertex2f(self.x, self.y)
+        glVertex2f(self.x + self.width, self.y)
+        glVertex2f(self.x + self.width, self.y + self.height)
+        glVertex2f(self.x, self.y + self.height)
+        glEnd()
+
+        glColor3f(1.0, 1.0, 1.0) 
+        render_text(self.x + 10, self.y + 10, self.height - 20, self.label)
+
 class Game:
-    def __init__(self):
+    def __init__(self, level):
+        self.level = level
         self.char_radius = 15
         self.char_x = 30
         self.char_y = (HEIGHT - TITLE_BAR_HEIGHT) // 2 - self.char_radius
@@ -24,11 +55,18 @@ class Game:
         self.fall_speed = 0
         self.max_fall_speed = 10
         self.is_on_platform = False
+        self.current_platform = None
+        self.platform_velocity = 0
         self.key_state = {glfw.KEY_LEFT: False, glfw.KEY_RIGHT: False, glfw.KEY_UP: False}
         self.score = 0
         self.game_won = False
         self.game_lost = False
-        self.platforms = self.load_platforms('platforms.txt')
+
+        if self.level == 'easy':
+            self.platforms = self.load_platforms('platforms.txt')
+        else:
+            self.platforms = self.load_platforms('Platformsforlevel2.txt')
+            
         self.obstacles = []
         self.coins = []
         self.generate_obstacles_and_coins()
@@ -39,9 +77,39 @@ class Game:
             for line in file:
                 parts = line.strip().split(',')
                 x, y, w, h = map(int, parts[:4])
-                color = tuple(map(float, parts[4:]))
-                platforms.append({'position': (x, y), 'size': (w, h), 'color': color})
+                color = tuple(map(float, parts[4:7]))
+                move = bool(int(parts[7])) if len(parts) > 7 else False 
+                direction = int(parts[8]) if len(parts) > 8 else 1 
+                move_distance = int(parts[9]) if len(parts) > 9 else 10 
+                platforms.append({'position': [x, y], 'size': (w, h), 'color': color, 'direction': direction, 'move_offset': 0, 'move': move, 'move_distance': move_distance, 'velocity': 0})
         return platforms
+
+    def update_platform_positions(self):
+        for platform in self.platforms:
+            if platform['move']: 
+                px, py = platform['position']
+                direction = platform['direction']
+                move_offset = platform['move_offset']
+                move_distance = platform['move_distance']
+
+            
+                if direction == 1: 
+                    px += 1
+                    move_offset += 1
+                    platform['velocity'] = 1
+                    if move_offset >= move_distance:
+                        platform['direction'] = -1
+                else: 
+                    px -= 1
+                    move_offset -= 1
+                    platform['velocity'] = -1
+                    if move_offset <= -move_distance:
+                        platform['direction'] = 1
+
+                platform['position'] = [px, py]
+                platform['move_offset'] = move_offset
+            else:
+                platform['velocity'] = 0
 
     def is_overlapping(self, x, y, size, objects):
         for obj in objects:
@@ -81,6 +149,8 @@ class Game:
         self.jump_velocity = 5
         self.fall_speed = 0
         self.is_on_platform = False
+        self.current_platform = None
+        self.platform_velocity = 0
         self.score = 0
         self.game_won = False
         self.game_lost = False
@@ -91,14 +161,14 @@ class Game:
             return
         print("Game Over")
         self.game_lost = True
-        app.menu.save_high_score(self.score)
+    
 
     def you_win(self):
         if self.game_won or self.game_lost:
             return
         print("You Win!!")
         self.game_won = True
-        app.menu.save_high_score(self.score)
+        app.menu.save_high_score(self.score, self.level)
 
     def key_input(self, window, key, scancode, action, mods):
         if action == glfw.PRESS:
@@ -108,12 +178,14 @@ class Game:
                 self.is_jumping = True
                 self.jump_velocity = 5
                 self.is_on_platform = False
+                self.platform_velocity = self.current_platform['velocity'] if self.current_platform else 0
+                self.current_platform = None
             if key == glfw.KEY_ESCAPE:
                 glfw.set_window_should_close(window, True)
             if key == glfw.KEY_R:
                 self.reset_game()
             if key == glfw.KEY_M:
-                app.current_screen = 'menu'  # Go back to the menu
+                app.current_screen = 'menu' 
             if key == glfw.KEY_P:
                 if app.current_screen == 'game':
                     app.current_screen = 'paused'
@@ -160,6 +232,7 @@ class Game:
                 if platform_top < circle_bottom < platform_bottom:
                     self.char_y = platform_top - self.char_radius
                     self.is_on_platform = True
+                    self.current_platform = platform
                     self.fall_speed = 0
                     self.jump_velocity = 0
                     break
@@ -199,6 +272,8 @@ class Game:
             self.is_jumping = True
             self.jump_velocity = 5
             self.is_on_platform = False
+            self.platform_velocity = self.current_platform['velocity'] if self.current_platform else 0
+            self.current_platform = None
 
         if self.is_jumping:
             self.char_y -= self.jump_velocity
@@ -213,11 +288,18 @@ class Game:
                     self.fall_speed = self.max_fall_speed
                 self.char_y += self.fall_speed
 
+        if self.is_on_platform and self.current_platform and self.current_platform['velocity'] != 0:
+            if self.current_platform['velocity'] > 0:
+                self.char_x += 2 * self.current_platform['velocity']
+            else:
+                self.char_x += 2 * self.current_platform['velocity']
+
         self.check_collision_and_update_position()
+        self.update_platform_positions()
 
         if self.char_y - self.char_radius > HEIGHT:
             self.game_over()
-
+        
     def draw_circle(self, cx, cy, radius, color, segments=32):
         theta = 2 * 3.14159 / segments
         glColor3f(*color)
@@ -271,23 +353,39 @@ class Game:
 
 class Menu:
     def __init__(self):
-        self.high_scores = self.load_high_scores()
+        self.high_scores_easy = self.load_high_scores('high_scores_easy.txt')
+        self.high_scores_hard = self.load_high_scores('high_scores_hard.txt')
+        self.selected_level = None
+        button_width, button_height = 270, 50
+        self.buttons = {
+            'easy': Button(WIDTH // 2 - button_width // 2 + 280, HEIGHT // 2 - 150, button_width, button_height, "Easy Level"),
+            'hard': Button(WIDTH // 2 - button_width // 2 + 600, HEIGHT // 2 - 150, button_width, button_height, "Hard Level"),
+        }
 
-    def load_high_scores(self):
+    def load_high_scores(self, filename):
         try:
-            with open(HIGH_SCORES_FILE, 'r') as file:
+            with open(filename, 'r') as file:
                 scores = [int(line.strip()) for line in file.readlines()]
             scores.sort(reverse=True)
             return scores[:MAX_HIGH_SCORES]
         except FileNotFoundError:
             return []
 
-    def save_high_score(self, score):
-        self.high_scores.append(score)
-        self.high_scores.sort(reverse=True)
-        self.high_scores = self.high_scores[:MAX_HIGH_SCORES]
-        with open(HIGH_SCORES_FILE, 'w') as file:
-            for score in self.high_scores:
+    def save_high_score(self, score, level):
+        if level == 'easy':
+            self.high_scores_easy.append(score)
+            self.high_scores_easy.sort(reverse=True)
+            self.high_scores_easy = self.high_scores_easy[:MAX_HIGH_SCORES]
+            self.save_scores_to_file(self.high_scores_easy, 'high_scores_easy.txt')
+        else:
+            self.high_scores_hard.append(score)
+            self.high_scores_hard.sort(reverse=True)
+            self.high_scores_hard = self.high_scores_hard[:MAX_HIGH_SCORES]
+            self.save_scores_to_file(self.high_scores_hard, 'high_scores_hard.txt')
+
+    def save_scores_to_file(self, scores, filename):
+        with open(filename, 'w') as file:
+            for score in scores:
                 file.write(f"{score}\n")
 
     def render(self):
@@ -295,13 +393,23 @@ class Menu:
         glClearColor(0.1, 0.1, 0.1, 1)
         START = WIDTH // 2 + 200
         END = HEIGHT // 2 - 200
-        render_text(START - 50, END - 100, 40, "Pixel Platformer")
-        render_text(START - 50, END, 30, "Press ENTER to Start")
-        render_text(START - 50, END + 50, 30, "High Scores:")
-        for i, score in enumerate(self.high_scores):
-            render_text(START - 50, END + 100 + i * 40, 30, f"{i + 1}. {score}")
 
-        # Instructions
+        render_text(START - 50, END - 100, 40, "Pixel Platformer")
+        render_text(START - 50, END, 30, "Choose Your Difficulty!")
+
+    
+        for button in self.buttons.values():
+            button.draw()
+
+        render_text(START - 50, END + 150, 30, "High Scores (Easy):")
+        for i, score in enumerate(self.high_scores_easy):
+            render_text(START - 50, END + 200 + i * 40, 30, f"{i + 1}. {score}")
+        
+        render_text(START - 50, END + 400, 30, "High Scores (Hard):")
+        for i, score in enumerate(self.high_scores_hard):
+            render_text(START - 50, END + 450 + i * 40, 30, f"{i + 1}. {score}")
+
+    
         instructions_start_x = 50
         instructions_start_y = 250
         render_text(instructions_start_x, instructions_start_y, 30, "Instructions:")
@@ -313,6 +421,19 @@ class Menu:
         render_text(instructions_start_x, instructions_start_y + 240, 20, "6. Press 'M' to go back to the menu at any time.")
         render_text(instructions_start_x, instructions_start_y + 280, 20, "7. Press 'P' to Pause/Resume the game.")
 
+    def mouse_input(self, window, button, action, mods):
+        if action == glfw.PRESS and button == glfw.MOUSE_BUTTON_LEFT:
+            xpos, ypos = glfw.get_cursor_pos(window)
+            ypos = ypos 
+
+            for key, button in self.buttons.items():
+                if button.is_hovered(xpos, ypos):
+                    button.state = 'clicked'
+                    self.selected_level = key
+                    app.current_screen = 'game'
+                    app.start_game()
+                    break
+                
     def key_input(self, window, key, scancode, action, mods):
         if action == glfw.PRESS and key == glfw.KEY_ENTER:
             app.current_screen = 'game'
@@ -320,9 +441,16 @@ class Menu:
         if action == glfw.PRESS and key == glfw.KEY_ESCAPE:
             glfw.set_window_should_close(window, True)
 
+    def mouse_move(self, window, xpos, ypos):
+        ypos = ypos 
+        for button in self.buttons.values():
+            if button.is_hovered(xpos, ypos):
+                button.state = 'hovered'
+            else:
+                button.state = 'normal'
+
 class App:
     def __init__(self):
-        self.game = Game()
         self.menu = Menu()
         self.current_screen = 'menu'
         self.window = self.init_window()
@@ -344,6 +472,8 @@ class App:
         glfw.set_window_pos(window, (screen_width - WIDTH) // 2, (screen_height - HEIGHT) // 2)
 
         glfw.set_key_callback(window, self.key_input_callback)
+        glfw.set_mouse_button_callback(window, self.mouse_input_callback)
+        glfw.set_cursor_pos_callback(window, self.mouse_move_callback)
         return window
 
     def key_input_callback(self, window, key, scancode, action, mods):
@@ -359,9 +489,21 @@ class App:
         else:
             self.game.key_input(window, key, scancode, action, mods)
 
+    def mouse_input_callback(self, window, button, action, mods):
+        if self.current_screen == 'menu':
+            self.menu.mouse_input(window, button, action, mods)
+
+    def mouse_move_callback(self, window, xpos, ypos):
+        if self.current_screen == 'menu':
+            self.menu.mouse_move(window, xpos, ypos)
+
     def init_opengl(self):
         glViewport(0, 0, WIDTH, HEIGHT)
         glOrtho(0, WIDTH, HEIGHT, 0, -1, 1)
+
+    def start_game(self):
+        level = self.menu.selected_level
+        self.game = Game(level)
 
     def main_loop(self):
         while not glfw.window_should_close(self.window):
