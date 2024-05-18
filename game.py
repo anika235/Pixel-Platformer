@@ -1,10 +1,8 @@
-from PIL import Image
 import glfw
 from OpenGL.GL import *
 from math import cos, sin
 import random
 from eng import render_text, render_text_with_random_colors, render_text_with_density
-import numpy as np
 
 WIDTH, HEIGHT = 1920, 1080
 TITLE_BAR_HEIGHT = 50
@@ -62,9 +60,9 @@ class Game:
         self.game_lost = False
 
         if self.level == 'easy':
-            self.platforms = self.load_platforms('platforms.txt')
+            self.platforms = self.load_platforms('platforms_level1.txt')
         else:
-            self.platforms = self.load_platforms('Platformsforlevel2.txt')
+            self.platforms = self.load_platforms('platforms_level2.txt')
             
         self.obstacles = []
         self.coins = []
