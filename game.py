@@ -125,7 +125,7 @@ class Game:
         for obj in objects:
             ox, oy = obj['position']
             osize = obj['size']
-            if (ox - size <= x <= ox + osize + size) and (oy - size <= y <= oy + osize + size):
+            if (ox - x) ** 2 + (ox - y) ** 2 < 30 ** 2:
                 return True
         return False
 
@@ -148,8 +148,8 @@ class Game:
         objects = []
         for _ in range(count):
             while True:
-                x = random.randint(0, WIDTH - size)
-                y = random.randint(0, HEIGHT - size)
+                x = random.randint(100, WIDTH - size)
+                y = random.randint(0, HEIGHT - size - 100)
                 if not self.is_overlapping(x, y, size, objects) and not self.is_overlapping(x, y, size, other_objects) and not self.is_overlapping_platforms(x, y, size):
                     objects.append({'position': (x, y), 'size': size, 'color': color})
                     break
