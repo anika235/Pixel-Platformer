@@ -1,3 +1,6 @@
+# 1. Anika Tabassum (Roll: 61)
+# 2. Bholanath Das Niloy (Roll: 22)
+# Please Read the README.md/README.pdf file for more details 
 import glfw
 from OpenGL.GL import *
 from math import cos, sin

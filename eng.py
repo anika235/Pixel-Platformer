@@ -1,3 +1,6 @@
+# 1. Anika Tabassum (Roll: 61)
+# 2. Bholanath Das Niloy (Roll: 22)
+# Please Read the README.md/README.pdf file for more details 
 from OpenGL.GL import *
 import random
 

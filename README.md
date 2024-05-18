@@ -55,6 +55,8 @@ Pixel Platformer is a 2D platformer game built using Python, OpenGL, and GLFW. N
    - Reach the goal platform to win the game.
 
 ## Contributing
+1. Anika Tabassum (Roll: 61)
+2. Bholanath Das Niloy (Roll: 22)
 
 Feel free to fork this repository and submit pull requests. For major changes, please open an issue first to discuss what you would like to change.
 
